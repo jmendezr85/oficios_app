@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/job_request_controller.dart';
-import '../domain/job_request.dart';
+import '../data/job_request_controller.dart'; // ✅
+/* DELETE: import '../domain/job_request.dart'; */
 
 class RequestsListScreen extends ConsumerWidget {
   const RequestsListScreen({super.key});
