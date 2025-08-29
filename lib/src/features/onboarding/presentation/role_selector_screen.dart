@@ -3,135 +3,72 @@ import 'package:flutter/material.dart';
 class RoleSelectorScreen extends StatelessWidget {
   const RoleSelectorScreen({super.key});
 
-  void _go(BuildContext context, String route, {Object? args}) {
-    Navigator.pushNamed(context, route, arguments: args);
+  void _goClient(BuildContext context) {
+    // Debe existir en app.dart: routes['/login'] = LoginScreen();
+    Navigator.pushNamed(context, '/login');
+  }
+
+  void _goPro(BuildContext context) {
+    // Debe existir en app.dart: routes['/register'] = RegisterScreen();
+    Navigator.pushNamed(context, '/register');
   }
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Elige tu rol')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text('¿Cómo deseas usar la app?', style: tt.titleLarge),
-            const SizedBox(height: 24),
-
-            // CLIENTE → ir directo a la lista de profesionales (demo)
-            _RoleCard(
-              title: 'Soy Cliente',
-              subtitle: 'Ver profesionales cercanos por oficio',
-              icon: Icons.search,
-              onTap: () => _go(
-                context,
-                '/pros',
-                args: 'Carpintero',
-              ), // puedes cambiar la categoría inicial
-            ),
-            const SizedBox(height: 16),
-
-            // PROFESIONAL → ir directo al formulario de registrar servicio (demo)
-            _RoleCard(
-              title: 'Soy Profesional',
-              subtitle: 'Registrar mi servicio y disponibilidad',
-              icon: Icons.home_repair_service,
-              onTap: () => _go(context, '/service_register'),
-            ),
-
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 12),
-
-            // Accesos secundarios al flujo con autenticación
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton(
-                  onPressed: () => _go(context, '/login'),
-                  child: Text(
-                    'Iniciar sesión',
-                    style: TextStyle(color: cs.primary),
+                Icon(Icons.handyman, size: 72, color: cs.primary),
+                const SizedBox(height: 12),
+                Text(
+                  '¿Cómo quieres usar la app?',
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+
+                // Soy Cliente
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.person_search),
+                    onPressed: () => _goClient(context),
+                    label: const Text('Soy Cliente'),
                   ),
                 ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () => _go(context, '/register'),
-                  child: Text(
-                    'Crear cuenta',
-                    style: TextStyle(color: cs.primary),
+                const SizedBox(height: 12),
+
+                // Soy Profesional
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.home_repair_service),
+                    onPressed: () => _goPro(context),
+                    label: const Text('Soy Profesional'),
                   ),
+                ),
+
+                const SizedBox(height: 16),
+                Text(
+                  'Como cliente podrás buscar profesionales y solicitar servicios.\n'
+                  'Como profesional podrás administrar tus servicios y solicitudes.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RoleCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _RoleCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: cs.primaryContainer,
-                child: Icon(icon, size: 28, color: cs.onPrimaryContainer),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right),
-            ],
           ),
         ),
       ),

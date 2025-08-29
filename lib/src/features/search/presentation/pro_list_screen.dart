@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../pro/data/service_controller.dart';
+
 import '../../pro/domain/service.dart';
 import '../domain/search_filters.dart';
+import '../data/service_api.dart';
 
 class ProListScreen extends ConsumerStatefulWidget {
   const ProListScreen({super.key});
@@ -49,6 +50,7 @@ class _ProListScreenState extends ConsumerState<ProListScreen> {
     super.dispose();
   }
 
+  // ======= ÚNICA implementación =======
   Future<void> _buscar({required bool reset}) async {
     if (reset) {
       setState(() {
@@ -58,31 +60,46 @@ class _ProListScreenState extends ConsumerState<ProListScreen> {
         _items.clear();
       });
     }
-    final list = await ref
-        .read(serviceControllerProvider.notifier)
-        .search(_filters);
-    if (!mounted) return;
-    setState(() {
-      _items.addAll(list);
-      _loading = false;
-      _hasMore = list.length == _filters.limit;
-    });
+
+    try {
+      final list = await ServiceApi.search(_filters);
+      if (!mounted) return;
+      setState(() {
+        _items.addAll(list);
+        _loading = false;
+        _hasMore = list.length == _filters.limit;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error cargando servicios: $e')));
+    }
   }
 
+  // ======= ÚNICA implementación =======
   Future<void> _loadMore() async {
     if (_loading || _loadingMore || !_hasMore) return;
     setState(() => _loadingMore = true);
-    final next = _filters.copyWith(offset: _filters.offset + _filters.limit);
-    final list = await ref
-        .read(serviceControllerProvider.notifier)
-        .search(next);
-    if (!mounted) return;
-    setState(() {
-      _filters = next;
-      _items.addAll(list);
-      _loadingMore = false;
-      _hasMore = list.length == _filters.limit;
-    });
+
+    try {
+      final next = _filters.copyWith(offset: _filters.offset + _filters.limit);
+      final list = await ServiceApi.search(next);
+      if (!mounted) return;
+      setState(() {
+        _filters = next;
+        _items.addAll(list);
+        _loadingMore = false;
+        _hasMore = list.length == _filters.limit;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingMore = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error cargando más: $e')));
+    }
   }
 
   Future<void> _openFilters() async {

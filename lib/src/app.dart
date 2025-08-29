@@ -1,29 +1,24 @@
 import 'package:flutter/material.dart';
-
-// Tema (solo light)
-import 'theme/app_theme.dart';
+import 'package:oficios_app/src/theme/app_theme.dart';
 
 // Onboarding
-import 'features/onboarding/presentation/splash_screen.dart';
-import 'features/onboarding/presentation/role_selector_screen.dart';
+import 'package:oficios_app/src/features/onboarding/presentation/role_selector_screen.dart';
 
-// Auth / Home
-import 'features/auth/presentation/login_screen.dart';
-import 'features/auth/presentation/register_screen.dart';
-import 'features/home/presentation/home_screen.dart';
+// Auth / Home / Pantallas existentes
+import 'package:oficios_app/src/features/auth/presentation/login_screen.dart';
+import 'package:oficios_app/src/features/auth/presentation/register_screen.dart';
+import 'package:oficios_app/src/features/home/presentation/home_screen.dart'; // opcional si sigues usando Home directa
 
-// Búsqueda / Profesionales
-import 'features/search/presentation/pro_list_screen.dart';
-import 'features/search/presentation/pro_detail_screen.dart';
+// Search & Requests (deep screens)
+import 'package:oficios_app/src/features/search/presentation/pro_list_screen.dart';
+import 'package:oficios_app/src/features/search/presentation/pro_detail_screen.dart';
+import 'package:oficios_app/src/features/requests/presentation/request_new_screen.dart';
+import 'package:oficios_app/src/features/requests/presentation/requests_list_screen.dart';
+import 'package:oficios_app/src/features/requests/presentation/client_history_screen.dart';
 
-// Profesional
-import 'features/pro/presentation/service_register_screen.dart';
-import 'features/pro/presentation/my_services_screen.dart';
-
-// ...
-import 'features/requests/presentation/request_new_screen.dart';
-import 'features/requests/presentation/requests_list_screen.dart';
-// ...
+// Shells por rol (nuevo)
+import 'package:oficios_app/src/shell/client_shell.dart';
+import 'package:oficios_app/src/shell/pro_shell.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -33,40 +28,25 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Oficios App',
       debugShowCheckedModeBanner: false,
-
-      // Solo tema claro (amarillo)
-      theme: AppTheme.light,
-
-      // Ruta inicial (puedes cambiar a '/splash' si tienes splash funcional)
-      initialRoute: '/role',
-
+      theme: AppTheme.light, // tu AppTheme existente
+      home: const RoleSelectorScreen(),
       routes: {
-        // Onboarding
-        '/splash': (_) => const SplashScreen(),
-        '/role': (_) => const RoleSelectorScreen(),
-
-        // Auth / Home
+        // Auth
         '/login': (_) => const LoginScreen(),
         '/register': (_) => const RegisterScreen(),
-        '/home': (_) => const HomeScreen(),
 
-        // Búsqueda / Profesionales
-        '/pros': (_) => const ProListScreen(),
+        // Shells por rol
+        '/client': (_) => const ClientShell(),
+        '/pro': (_) => const ProShell(),
+
+        // Deep screens (se abren desde tabs o listas)
+        '/home': (_) => const HomeScreen(), // si quieres mantenerla
+        '/pro_list': (_) => const ProListScreen(),
         '/pro_detail': (_) => const ProDetailScreen(),
-
-        // Profesional
-        '/service_register': (_) => const ServiceRegisterScreen(),
-        '/my_services': (_) => const MyServicesScreen(),
-
-        '/request_new': (_) => const RequestNewScreen(), // 👈 nueva
-        '/requests': (_) => const RequestsListScreen(), // 👈 nueva
+        '/request_new': (_) => const RequestNewScreen(),
+        '/requests': (_) => const RequestsListScreen(),
+        '/client_history': (_) => const ClientHistoryScreen(),
       },
-
-      // Fallback por si llega una ruta desconocida
-      onUnknownRoute: (settings) => MaterialPageRoute<void>(
-        builder: (_) => const RoleSelectorScreen(),
-        settings: const RouteSettings(name: '/role'),
-      ),
     );
   }
 }

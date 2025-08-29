@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+// Si tienes un AuthService real, úsalo. Si no, esto funciona local.
+// import '../../../core/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,9 +24,16 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void _goToRegister() {
+    Navigator.pushNamed(context, '/register');
+  }
+
   Future<void> _submit() async {
-    final valid = _formKey.currentState?.validate() ?? false;
-    if (!valid) {
+    final form = _formKey.currentState;
+    if (form == null) {
+      return;
+    }
+    if (!form.validate()) {
       return;
     }
 
@@ -32,64 +41,74 @@ class _LoginScreenState extends State<LoginScreen> {
       _loading = true;
     });
 
-    // Simulación de login (aquí llamarías a tu backend)
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      // Si tienes AuthService, úsalo aquí.
+      // await AuthService.login(email: _emailCtrl.text.trim(), password: _passCtrl.text);
 
-    // Guardar "sesión iniciada"
-    await AuthService.login(email: _emailCtrl.text.trim());
+      // Guardar sesión mínima local (rol cliente + email)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_role', 'client');
+      await prefs.setString('auth_email', _emailCtrl.text.trim());
 
-    if (!mounted) {
-      return;
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushNamedAndRemoveUntil(context, '/client', (_) => false);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('No se pudo iniciar sesión: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
-    setState(() {
-      _loading = false;
-    });
-
-    // Ir a Home y limpiar el stack
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-  }
-
-  void _goToRegister() {
-    Navigator.pushReplacementNamed(context, '/register');
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Iniciar sesión')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: AutofillGroup(
+        child: AutofillGroup(
+          child: Form(
+            key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'Bienvenido',
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Text(
-                  'Bienvenido de vuelta',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  'Ingresa con tu correo para continuar como cliente.',
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 TextFormField(
                   controller: _emailCtrl,
-                  autofillHints: const [
-                    AutofillHints.username,
-                    AutofillHints.email,
-                  ],
+                  autofillHints: const [AutofillHints.email],
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Correo electrónico',
                     prefixIcon: Icon(Icons.email),
                   ),
-                  keyboardType: TextInputType.emailAddress,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Ingresa tu correo';
-                    }
-                    if (!v.contains('@') || !v.contains('.')) {
+                    final t = v?.trim() ?? '';
+                    if (t.isEmpty || !t.contains('@')) {
                       return 'Correo inválido';
                     }
                     return null;
@@ -99,11 +118,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 TextFormField(
                   controller: _passCtrl,
+                  obscureText: _obscure,
                   autofillHints: const [AutofillHints.password],
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
+                      tooltip: _obscure ? 'Mostrar' : 'Ocultar',
                       onPressed: () {
                         setState(() {
                           _obscure = !_obscure;
@@ -114,27 +135,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  obscureText: _obscure,
                   validator: (v) {
-                    if (v == null || v.isEmpty) {
-                      return 'Ingresa tu contraseña';
-                    }
-                    if (v.length < 6) {
+                    final t = v ?? '';
+                    if (t.length < 6) {
                       return 'Mínimo 6 caracteres';
                     }
                     return null;
                   },
                 ),
+                const SizedBox(height: 24),
 
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _loading ? null : _submit,
-                  child: _loading
-                      ? const CircularProgressIndicator()
-                      : const Text('Entrar'),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _loading ? null : _submit,
+                    icon: _loading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.login),
+                    label: Text(_loading ? 'Ingresando...' : 'Iniciar sesión'),
+                  ),
                 ),
-
                 const SizedBox(height: 12),
+
                 TextButton(
                   onPressed: _loading ? null : _goToRegister,
                   child: Text(

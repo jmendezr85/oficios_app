@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+// import '../../../core/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -24,9 +25,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  void _goToLogin() {
+    Navigator.pushNamed(context, '/login');
+  }
+
   Future<void> _submit() async {
-    final valid = _formKey.currentState?.validate() ?? false;
-    if (!valid) {
+    final form = _formKey.currentState;
+    if (form == null) {
+      return;
+    }
+    if (!form.validate()) {
       return;
     }
 
@@ -34,61 +42,74 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _loading = true;
     });
 
-    // Simulación de registro (aquí llamarías a tu backend)
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      // Si tienes AuthService.register, úsalo aquí.
+      // await AuthService.register(name: _nameCtrl.text.trim(), email: _emailCtrl.text.trim(), password: _passCtrl.text);
 
-    // Guardar "sesión iniciada"
-    await AuthService.login(email: _emailCtrl.text.trim());
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_role', 'pro');
+      await prefs.setString('auth_email', _emailCtrl.text.trim());
+      await prefs.setString('auth_name', _nameCtrl.text.trim());
 
-    if (!mounted) {
-      return;
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushNamedAndRemoveUntil(context, '/pro', (_) => false);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('No se pudo registrar: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
-    setState(() {
-      _loading = false;
-    });
-
-    // Ir a Home y limpiar el stack
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-  }
-
-  void _goToLogin() {
-    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Crear cuenta')),
+      appBar: AppBar(title: const Text('Crear cuenta (Profesional)')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: AutofillGroup(
+        child: AutofillGroup(
+          child: Form(
+            key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'Regístrate',
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Text(
-                  'Regístrate como usuario o profesional',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  'Crea tu cuenta para gestionar solicitudes.',
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 TextFormField(
                   controller: _nameCtrl,
-                  autofillHints: const [AutofillHints.name],
                   decoration: const InputDecoration(
                     labelText: 'Nombre completo',
                     prefixIcon: Icon(Icons.person),
                   ),
+                  textInputAction: TextInputAction.next,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Ingresa tu nombre';
-                    }
-                    if (v.trim().length < 3) {
-                      return 'Nombre demasiado corto';
+                    final t = v?.trim() ?? '';
+                    if (t.length < 3) {
+                      return 'Escribe tu nombre completo';
                     }
                     return null;
                   },
@@ -98,16 +119,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _emailCtrl,
                   autofillHints: const [AutofillHints.email],
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Correo electrónico',
                     prefixIcon: Icon(Icons.email),
                   ),
-                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Ingresa tu correo';
-                    }
-                    if (!v.contains('@') || !v.contains('.')) {
+                    final t = v?.trim() ?? '';
+                    if (t.isEmpty || !t.contains('@')) {
                       return 'Correo inválido';
                     }
                     return null;
@@ -117,11 +137,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 TextFormField(
                   controller: _passCtrl,
+                  obscureText: _obscure,
                   autofillHints: const [AutofillHints.newPassword],
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
+                      tooltip: _obscure ? 'Mostrar' : 'Ocultar',
                       onPressed: () {
                         setState(() {
                           _obscure = !_obscure;
@@ -132,27 +154,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-                  obscureText: _obscure,
                   validator: (v) {
-                    if (v == null || v.isEmpty) {
-                      return 'Crea una contraseña';
-                    }
-                    if (v.length < 6) {
+                    final t = v ?? '';
+                    if (t.length < 6) {
                       return 'Mínimo 6 caracteres';
                     }
                     return null;
                   },
                 ),
+                const SizedBox(height: 24),
 
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _loading ? null : _submit,
-                  child: _loading
-                      ? const CircularProgressIndicator()
-                      : const Text('Crear cuenta'),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _loading ? null : _submit,
+                    icon: _loading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.person_add),
+                    label: Text(_loading ? 'Creando...' : 'Crear cuenta'),
+                  ),
                 ),
-
                 const SizedBox(height: 12),
+
                 TextButton(
                   onPressed: _loading ? null : _goToLogin,
                   child: Text(

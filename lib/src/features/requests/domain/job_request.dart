@@ -21,17 +21,28 @@ class JobRequest {
     required this.creadoEn,
   });
 
-  JobRequest copyWith({String? status}) {
+  /// ✅ Agregamos copyWith para que el controller pueda actualizar campos
+  JobRequest copyWith({
+    String? id,
+    String? serviceId,
+    String? clientName,
+    String? clientPhone,
+    String? descripcion,
+    String? ciudad,
+    DateTime? scheduledAt,
+    String? status,
+    DateTime? creadoEn,
+  }) {
     return JobRequest(
-      id: id,
-      serviceId: serviceId,
-      clientName: clientName,
-      clientPhone: clientPhone,
-      descripcion: descripcion,
-      ciudad: ciudad,
-      scheduledAt: scheduledAt,
+      id: id ?? this.id,
+      serviceId: serviceId ?? this.serviceId,
+      clientName: clientName ?? this.clientName,
+      clientPhone: clientPhone ?? this.clientPhone,
+      descripcion: descripcion ?? this.descripcion,
+      ciudad: ciudad ?? this.ciudad,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
       status: status ?? this.status,
-      creadoEn: creadoEn,
+      creadoEn: creadoEn ?? this.creadoEn,
     );
   }
 }
