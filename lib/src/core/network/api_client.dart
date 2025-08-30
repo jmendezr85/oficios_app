@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 /// - Dispositivo físico:  http://TU_IP_LOCAL/oficios_api  (ej. 192.168.0.10)
 /// - PC (debug web):      http://localhost/oficios_api
 class ApiClient {
-  static const String baseUrl = 'http://192.168.1.11/oficios_api';
+  static const String baseUrl = 'http://192.168.1.7/oficios_api';
   // 👈 AJUSTA aquí si usas dispositivo físico
 
   static Future<Map<String, dynamic>> getJson(
