@@ -80,7 +80,7 @@ lib/
 
 ## 👨‍💻 Autor
 
-Desarrollado por [TU NOMBRE](https://github.com/TU_USUARIO) con ❤️ en Flutter.
+Desarrollado por [Jorge Méndez](https://github.com/jmendezr85) con ❤️ en Flutter.
 
 ---
 
