@@ -115,7 +115,7 @@ class _ProListScreenState extends ConsumerState<ProListScreen> {
     }
   }
 
-  void _changeSort(SortBy by) {
+  void _changeSort(ServiceSortBy by) {
     setState(() => _filters = _filters.copyWith(sortBy: by));
     _buscar(reset: true);
   }
@@ -129,21 +129,21 @@ class _ProListScreenState extends ConsumerState<ProListScreen> {
       appBar: AppBar(
         title: const Text('Profesionales'),
         actions: [
-          PopupMenuButton<SortBy>(
+          PopupMenuButton<ServiceSortBy>(
             tooltip: 'Ordenar',
             initialValue: _filters.sortBy,
             onSelected: _changeSort,
             itemBuilder: (context) => const [
               PopupMenuItem(
-                value: SortBy.recientes,
+                value: ServiceSortBy.recientes,
                 child: Text('Más recientes'),
               ),
               PopupMenuItem(
-                value: SortBy.precioAsc,
+                value: ServiceSortBy.precioAsc,
                 child: Text('Precio: menor a mayor'),
               ),
               PopupMenuItem(
-                value: SortBy.precioDesc,
+                value: ServiceSortBy.precioDesc,
                 child: Text('Precio: mayor a menor'),
               ),
             ],
@@ -343,7 +343,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
   late final TextEditingController _minCtrl;
   late final TextEditingController _maxCtrl;
   bool? _disponible;
-  SortBy _sortBy = SortBy.recientes;
+  ServiceSortBy _sortBy = ServiceSortBy.recientes;
 
   @override
   void initState() {
@@ -465,7 +465,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
               onChanged: (val) => setState(() => _disponible = val),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<SortBy>(
+            DropdownButtonFormField<ServiceSortBy>(
               value: _sortBy,
               decoration: const InputDecoration(
                 labelText: 'Ordenar por',
@@ -473,20 +473,20 @@ class _FiltersSheetState extends State<_FiltersSheet> {
               ),
               items: const [
                 DropdownMenuItem(
-                  value: SortBy.recientes,
+                  value: ServiceSortBy.recientes,
                   child: Text('Más recientes'),
                 ),
                 DropdownMenuItem(
-                  value: SortBy.precioAsc,
+                  value: ServiceSortBy.precioAsc,
                   child: Text('Precio: menor a mayor'),
                 ),
                 DropdownMenuItem(
-                  value: SortBy.precioDesc,
+                  value: ServiceSortBy.precioDesc,
                   child: Text('Precio: mayor a menor'),
                 ),
               ],
               onChanged: (val) =>
-                  setState(() => _sortBy = val ?? SortBy.recientes),
+                  setState(() => _sortBy = val ?? ServiceSortBy.recientes),
             ),
             const SizedBox(height: 16),
             Row(

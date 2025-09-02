@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-// Si tienes un AuthService real, úsalo. Si no, esto funciona local.
-// import '../../../core/auth_service.dart';
+import '../../../core/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -46,9 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // await AuthService.login(email: _emailCtrl.text.trim(), password: _passCtrl.text);
 
       // Guardar sesión mínima local (rol cliente + email)
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_role', 'client');
-      await prefs.setString('auth_email', _emailCtrl.text.trim());
+      await AuthService.login(role: 'client', email: _emailCtrl.text.trim());
 
       if (!mounted) {
         return;

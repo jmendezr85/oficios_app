@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-// import '../../../core/auth_service.dart';
+import '../../../core/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -46,10 +45,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Si tienes AuthService.register, úsalo aquí.
       // await AuthService.register(name: _nameCtrl.text.trim(), email: _emailCtrl.text.trim(), password: _passCtrl.text);
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_role', 'pro');
-      await prefs.setString('auth_email', _emailCtrl.text.trim());
-      await prefs.setString('auth_name', _nameCtrl.text.trim());
+      await AuthService.login(
+        role: 'pro',
+        email: _emailCtrl.text.trim(),
+        name: _nameCtrl.text.trim(),
+      );
 
       if (!mounted) {
         return;

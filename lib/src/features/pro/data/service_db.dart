@@ -82,10 +82,11 @@ class ServiceDb {
     });
   }
 
-  String _orderByFor(SortBy sortBy) => switch (sortBy) {
-    SortBy.precioAsc => 'precio_por_hora ASC, datetime(creado_en) DESC',
-    SortBy.precioDesc => 'precio_por_hora DESC, datetime(creado_en) DESC',
-    SortBy.recientes => 'datetime(creado_en) DESC',
+  String _orderByFor(ServiceSortBy sortBy) => switch (sortBy) {
+    ServiceSortBy.precioAsc => 'precio_por_hora ASC, datetime(creado_en) DESC',
+    ServiceSortBy.precioDesc =>
+      'precio_por_hora DESC, datetime(creado_en) DESC',
+    ServiceSortBy.recientes => 'datetime(creado_en) DESC',
   };
 
   /// Búsqueda con filtros (paginada y orden configurable)

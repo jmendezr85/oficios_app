@@ -1,4 +1,4 @@
-enum SortBy {
+enum ServiceSortBy {
   recientes, // creado_en DESC (default)
   precioAsc, // precio_por_hora ASC
   precioDesc, // precio_por_hora DESC
@@ -13,7 +13,7 @@ class SearchFilters {
   final double? maxPrecio;
   final int limit; // paginación
   final int offset; // paginación
-  final SortBy sortBy; // 👈 nuevo
+  final ServiceSortBy sortBy;
 
   const SearchFilters({
     this.query,
@@ -24,7 +24,7 @@ class SearchFilters {
     this.maxPrecio,
     this.limit = 20,
     this.offset = 0,
-    this.sortBy = SortBy.recientes,
+    this.sortBy = ServiceSortBy.recientes,
   });
 
   SearchFilters copyWith({
@@ -36,7 +36,7 @@ class SearchFilters {
     double? maxPrecio,
     int? limit,
     int? offset,
-    SortBy? sortBy,
+    ServiceSortBy? sortBy,
   }) {
     return SearchFilters(
       query: query ?? this.query,

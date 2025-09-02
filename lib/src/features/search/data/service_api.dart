@@ -8,8 +8,8 @@ class ServiceApi {
       'limit': '${f.limit}',
       'offset': '${f.offset}',
       'sortBy': switch (f.sortBy) {
-        SortBy.precioAsc => 'precioAsc',
-        SortBy.precioDesc => 'precioDesc',
+        ServiceSortBy.precioAsc => 'precioAsc',
+        ServiceSortBy.precioDesc => 'precioDesc',
         _ => 'recientes',
       },
     };

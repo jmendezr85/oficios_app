@@ -8,7 +8,7 @@ final proRepositoryProvider = Provider<ProRepository>((ref) {
   return ProRepository.instance;
 });
 
-// Parámetros de búsqueda globales (query, minRating, sortBy)
+// Parámetros de búsqueda globales (query, minRating, ProfessionalSortBy)
 final searchParamsProvider = StateProvider<SearchParams>((ref) {
   return const SearchParams(); // valores por defecto
 });

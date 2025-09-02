@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:oficios_app/src/core/config/env.dart';
 import 'package:oficios_app/src/features/pro/domain/service.dart';
 
 class ServiceApi {
@@ -7,11 +8,11 @@ class ServiceApi {
 
   final http.Client _client;
 
-  /// Cambia esta URL a tu backend (XAMPP)
-  static const String baseUrl = 'http://192.168.1.11/oficios_api';
+  /// Base URL for the backend API.
+  static String get _baseUrl => Env.apiBaseUrl;
 
   Future<List<Service>> listByProPhone(String proPhone) async {
-    final uri = Uri.parse('$baseUrl/services_get.php?pro_phone=$proPhone');
+    final uri = Uri.parse('$_baseUrl/services_get.php?pro_phone=$proPhone');
     final res = await _client.get(uri);
     if (res.statusCode != 200) {
       throw Exception('HTTP ${res.statusCode}: ${res.body}');
@@ -31,7 +32,7 @@ class ServiceApi {
     int offset = 0,
   }) async {
     final uri = Uri.parse(
-      '$baseUrl/services_get.php?q=${Uri.encodeQueryComponent(q)}&limit=$limit&offset=$offset',
+      '$_baseUrl/services_get.php?q=${Uri.encodeQueryComponent(q)}&limit=$limit&offset=$offset',
     );
     final res = await _client.get(uri);
     if (res.statusCode != 200) {
@@ -47,7 +48,7 @@ class ServiceApi {
   }
 
   Future<Service> create(Service service) async {
-    final uri = Uri.parse('$baseUrl/services_post.php');
+    final uri = Uri.parse('$_baseUrl/services_post.php');
     final res = await _client.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -61,7 +62,7 @@ class ServiceApi {
   }
 
   Future<Service> update(Service service) async {
-    final uri = Uri.parse('$baseUrl/services_put.php?id=${service.id}');
+    final uri = Uri.parse('$_baseUrl/services_put.php?id=${service.id}');
     final res = await _client.put(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -75,7 +76,7 @@ class ServiceApi {
   }
 
   Future<void> delete(int id) async {
-    final uri = Uri.parse('$baseUrl/services_delete.php?id=$id');
+    final uri = Uri.parse('$_baseUrl/services_delete.php?id=$id');
     final res = await _client.delete(uri);
     if (res.statusCode != 200) {
       throw Exception('HTTP ${res.statusCode}: ${res.body}');

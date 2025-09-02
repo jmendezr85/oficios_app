@@ -61,10 +61,10 @@ class ProRepository {
 
     // Orden
     switch (params.sortBy) {
-      case SortBy.rating:
+      case ProfessionalSortBy.rating:
         results.sort((a, b) => b.rating.compareTo(a.rating));
         break;
-      case SortBy.name:
+      case ProfessionalSortBy.name:
         results.sort((a, b) => a.nombre.compareTo(b.nombre));
         break;
     }
