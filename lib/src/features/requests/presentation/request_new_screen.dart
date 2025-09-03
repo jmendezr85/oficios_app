@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../pro/domain/service.dart';
 import '../data/job_request_api.dart';
+import '../data/job_request_controller.dart';
 
 class RequestNewScreen extends ConsumerStatefulWidget {
   const RequestNewScreen({super.key});
@@ -94,7 +95,19 @@ class _RequestNewScreenState extends ConsumerState<RequestNewScreen> {
             : _cityCtrl.text.trim(),
         scheduledAt: _scheduled,
       );
-
+      await ref
+          .read(jobRequestControllerProvider.notifier)
+          .create(
+            id: id,
+            serviceId: s.id,
+            clientName: _nameCtrl.text.trim(),
+            clientPhone: _phoneCtrl.text.trim(),
+            descripcion: _descCtrl.text.trim(),
+            ciudad: _cityCtrl.text.trim().isEmpty
+                ? s.ciudad
+                : _cityCtrl.text.trim(),
+            scheduledAt: _scheduled,
+          );
       if (!mounted) {
         return;
       }

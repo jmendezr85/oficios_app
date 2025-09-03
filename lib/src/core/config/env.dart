@@ -16,6 +16,6 @@ class Env {
   /// Base URL for the backend API.
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.1.10/oficios_api',
+    defaultValue: 'http://192.168.1.7/oficios_api',
   );
 }

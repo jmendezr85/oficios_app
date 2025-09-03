@@ -16,6 +16,7 @@ class JobRequestController extends StateNotifier<List<JobRequest>> {
   }
 
   Future<void> create({
+    String? id,
     required String serviceId,
     required String clientName,
     required String clientPhone,
@@ -23,10 +24,10 @@ class JobRequestController extends StateNotifier<List<JobRequest>> {
     required String ciudad,
     DateTime? scheduledAt,
   }) async {
-    final id = const Uuid().v4();
+    final newId = id ?? const Uuid().v4();
     final now = DateTime.now();
     final req = JobRequest(
-      id: id,
+      id: newId,
       serviceId: serviceId,
       clientName: clientName,
       clientPhone: clientPhone,

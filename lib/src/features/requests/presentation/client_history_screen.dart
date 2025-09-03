@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../data/job_request_controller.dart';
 import '../data/job_request_api.dart';
 import '../domain/job_request.dart';
 
@@ -143,7 +143,18 @@ class _ClientHistoryScreenState extends ConsumerState<ClientHistoryScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-
+    final locals = ref.watch(jobRequestControllerProvider);
+    final localFiltered = locals
+        .where(
+          (r) =>
+              (_phone == null || r.clientPhone == _phone) &&
+              (_status == null || r.status == _status),
+        )
+        .toList();
+    final items = [
+      ..._items,
+      ...localFiltered.where((l) => _items.every((r) => r.id != l.id)),
+    ];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historial del cliente'),
@@ -189,7 +200,7 @@ class _ClientHistoryScreenState extends ConsumerState<ClientHistoryScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _load,
-              child: _items.isEmpty && !_loading
+              child: items.isEmpty && !_loading
                   ? ListView(
                       children: [
                         const SizedBox(height: 80),
@@ -212,10 +223,10 @@ class _ClientHistoryScreenState extends ConsumerState<ClientHistoryScreen> {
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
-                      itemCount: _items.length,
+                      itemCount: items.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, i) {
-                        final r = _items[i];
+                        final r = items[i];
                         return Card(
                           child: Padding(
                             padding: const EdgeInsets.all(12),
