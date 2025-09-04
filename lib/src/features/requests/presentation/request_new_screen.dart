@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../pro/domain/service.dart';
-import '../data/job_request_api.dart';
 import '../data/job_request_controller.dart';
 
 class RequestNewScreen extends ConsumerStatefulWidget {
@@ -85,20 +84,9 @@ class _RequestNewScreenState extends ConsumerState<RequestNewScreen> {
     });
 
     try {
-      final id = await JobRequestApi.create(
-        serviceId: s.id,
-        clientName: _nameCtrl.text.trim(),
-        clientPhone: _phoneCtrl.text.trim(),
-        descripcion: _descCtrl.text.trim(),
-        ciudad: _cityCtrl.text.trim().isEmpty
-            ? s.ciudad
-            : _cityCtrl.text.trim(),
-        scheduledAt: _scheduled,
-      );
       await ref
           .read(jobRequestControllerProvider.notifier)
           .create(
-            id: id,
             serviceId: s.id,
             clientName: _nameCtrl.text.trim(),
             clientPhone: _phoneCtrl.text.trim(),
@@ -113,7 +101,7 @@ class _RequestNewScreenState extends ConsumerState<RequestNewScreen> {
       }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Solicitud enviada (id: $id)')));
+      ).showSnackBar(const SnackBar(content: Text('Solicitud enviada')));
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) {

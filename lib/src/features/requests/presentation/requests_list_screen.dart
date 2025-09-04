@@ -157,11 +157,7 @@ class _RequestsListScreenState extends ConsumerState<RequestsListScreen> {
                                               final ctx =
                                                   context; // capturamos el BuildContext
                                               try {
-                                                await JobRequestApi.updateStatus(
-                                                  id: r.id,
-                                                  status: newStatus,
-                                                );
-                                                ref
+                                                await ref
                                                     .read(
                                                       jobRequestControllerProvider
                                                           .notifier,

@@ -20,7 +20,7 @@ class ServiceApi {
     if (f.minPrecio != null) qp['minPrecio'] = '${f.minPrecio}';
     if (f.maxPrecio != null) qp['maxPrecio'] = '${f.maxPrecio}';
 
-    final json = await ApiClient.getJson('/services', query: qp);
+    final json = await ApiClient.getJson('/services_get', query: qp);
     final items = (json['items'] as List).cast<Map<String, dynamic>>();
     return items
         .map(

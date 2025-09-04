@@ -1,74 +1,91 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../domain/service.dart';
-import 'service_db.dart';
-import '../../search/domain/search_filters.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// (OPCIONAL) migración desde SharedPreferences
+import '../../search/domain/search_filters.dart';
+import '../domain/service.dart';
+import 'service_api.dart';
 import 'service_store.dart';
 
+/// Controller that manages the professional services.
+///
+/// It delegates all persistence to the backend API and optionally keeps a
+/// local cache using [ServiceStore] for offline availability.
 class ServiceController extends StateNotifier<List<Service>> {
-  ServiceController(this._db, this._legacyStore) : super(const []) {
+  ServiceController(this._api, this._cache) : super(const []) {
     _init();
   }
 
-  final ServiceDb _db;
-  final ServiceStore? _legacyStore;
+  final ServiceApi _api;
+  final ServiceStore? _cache;
+  String? _proPhone;
 
   Future<void> _init() async {
-    final current = await _db.getAll();
+    final prefs = await SharedPreferences.getInstance();
+    _proPhone = prefs.getString('auth_phone');
 
-    if (current.isEmpty && _legacyStore != null) {
-      final legacy = await _legacyStore.getAll();
-      if (legacy.isNotEmpty) {
-        await _db.insertMany(legacy);
+    try {
+      if (_proPhone != null && _proPhone!.isNotEmpty) {
+        final list = await _api.listByProPhone(_proPhone!);
+        state = list;
+        await _cache?.setAll(list);
+        return;
       }
+    } catch (_) {
+      // ignore network errors and fall back to cache
     }
 
-    // (Opcional) sembrar datos demo si sigue vacío
-    if (await _db.isEmpty()) {
-      await _db.seedDemoIfEmpty();
-    }
-
-    state = await _db.getAll();
+    // Fallback to cached data when network request fails or phone is missing
+    state = await _cache?.getAll() ?? const [];
   }
 
   Future<void> add(Service s) async {
-    await _db.insert(s);
-    state = [s, ...state];
+    final created = await _api.create(s);
+    state = [created, ...state];
+    await _cache?.setAll(state);
   }
 
   Future<void> remove(String id) async {
-    await _db.delete(id);
+    await _api.delete(int.parse(id));
     state = state.where((e) => e.id != id).toList(growable: false);
+    await _cache?.setAll(state);
   }
 
   Future<void> toggleDisponible(String id) async {
-    final curr = state.firstWhere((e) => e.id == id);
-    final newVal = !curr.disponible;
-    await _db.updateDisponible(id, newVal);
-    state = state
-        .map((e) => e.id == id ? e.copyWith(disponible: newVal) : e)
-        .toList(growable: false);
+    final current = state.firstWhere((e) => e.id == id);
+    final updated = current.copyWith(disponible: !current.disponible);
+    await _api.update(updated);
+    state = state.map((e) => e.id == id ? updated : e).toList(growable: false);
+    await _cache?.setAll(state);
   }
 
   Future<void> reload() async {
-    state = await _db.getAll();
+    if (_proPhone == null || _proPhone!.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      _proPhone = prefs.getString('auth_phone');
+    }
+    if (_proPhone != null && _proPhone!.isNotEmpty) {
+      final list = await _api.listByProPhone(_proPhone!);
+      state = list;
+      await _cache?.setAll(list);
+    }
   }
 
-  /// Búsqueda con filtros (no altera `state`, devuelve resultados puntuales)
+  /// Search services using backend API. Only the query, limit and offset
+  /// filters are currently supported by the endpoint.
   Future<List<Service>> search(SearchFilters filters) {
-    return _db.search(filters);
+    final q = filters.query ?? '';
+    return _api.search(q: q, limit: filters.limit, offset: filters.offset);
   }
 }
 
 // Providers
-final serviceDbProvider = Provider<ServiceDb>((ref) => ServiceDb());
+final serviceApiProvider = Provider<ServiceApi>((ref) => ServiceApi());
 final serviceStoreProvider = Provider<ServiceStore?>((ref) => ServiceStore());
 
 final serviceControllerProvider =
     StateNotifierProvider<ServiceController, List<Service>>(
       (ref) => ServiceController(
-        ref.read(serviceDbProvider),
+        ref.read(serviceApiProvider),
         ref.read(serviceStoreProvider),
       ),
     );

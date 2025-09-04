@@ -1,22 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart'; // ✅ Asegúrate de tener la dependencia
+
 import '../domain/job_request.dart';
-import 'job_request_db.dart';
+import 'job_request_api.dart';
 
+/// Controller that manages job requests and delegates persistence to the
+/// backend API. It keeps the current list in memory and can be extended with a
+/// local cache if offline support is required.
 class JobRequestController extends StateNotifier<List<JobRequest>> {
-  JobRequestController(this._db) : super(const []) {
-    reload();
-  }
-
-  final JobRequestDb _db;
+  JobRequestController() : super(const []);
 
   Future<void> reload({String? status}) async {
-    final list = await _db.getAll(status: status);
+    final list = await JobRequestApi.list(status: status);
     state = list;
   }
 
   Future<void> create({
-    String? id,
     required String serviceId,
     required String clientName,
     required String clientPhone,
@@ -24,35 +22,27 @@ class JobRequestController extends StateNotifier<List<JobRequest>> {
     required String ciudad,
     DateTime? scheduledAt,
   }) async {
-    final newId = id ?? const Uuid().v4();
-    final now = DateTime.now();
-    final req = JobRequest(
-      id: newId,
+    await JobRequestApi.create(
       serviceId: serviceId,
       clientName: clientName,
       clientPhone: clientPhone,
       descripcion: descripcion,
       ciudad: ciudad,
       scheduledAt: scheduledAt,
-      status: 'pending',
-      creadoEn: now,
     );
-    await _db.insert(req);
-    state = [req, ...state];
+    await reload();
   }
 
   Future<void> setStatus(String id, String status) async {
-    await _db.updateStatus(id, status);
+    await JobRequestApi.updateStatus(id: id, status: status);
     state = state
         .map((r) => r.id == id ? r.copyWith(status: status) : r)
         .toList();
   }
 }
 
-// Providers
-final jobRequestDbProvider = Provider<JobRequestDb>((ref) => JobRequestDb());
-
+// Provider
 final jobRequestControllerProvider =
     StateNotifierProvider<JobRequestController, List<JobRequest>>(
-      (ref) => JobRequestController(ref.read(jobRequestDbProvider)),
+      (ref) => JobRequestController(),
     );
