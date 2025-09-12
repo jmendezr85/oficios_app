@@ -300,6 +300,20 @@ Resources:
             Path: /requests
             Method: get
 
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api/
+      Handler: handler.lambda_handler
+      Runtime: python3.9
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /
+            Method: get
+
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
