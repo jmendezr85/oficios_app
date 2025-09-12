@@ -14,9 +14,10 @@ class ApiClient {
   static Future<Map<String, dynamic>> getJson(
     String path, {
     Map<String, String>? query,
+    Map<String, String>? headers,
   }) async {
     final uri = Uri.parse('$_baseUrl$path').replace(queryParameters: query);
-    final res = await http.get(uri);
+    final res = await http.get(uri, headers: headers);
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return json.decode(res.body) as Map<String, dynamic>;
     }
@@ -25,12 +26,16 @@ class ApiClient {
 
   static Future<Map<String, dynamic>> postJson(
     String path,
-    Map<String, dynamic> body,
-  ) async {
+    Map<String, dynamic> body, {
+    Map<String, String>? headers,
+  }) async {
     final uri = Uri.parse('$_baseUrl$path');
     final res = await http.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        if (headers != null) ...headers,
+      },
       body: json.encode(body),
     );
     if (res.statusCode >= 200 && res.statusCode < 300) {

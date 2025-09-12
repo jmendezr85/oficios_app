@@ -11,11 +11,10 @@ import 'service_store.dart';
 /// It delegates all persistence to the backend API and optionally keeps a
 /// local cache using [ServiceStore] for offline availability.
 class ServiceController extends StateNotifier<List<Service>> {
-  ServiceController(this._api, this._cache) : super(const []) {
+  ServiceController(this._cache) : super(const []) {
     _init();
   }
 
-  final ServiceApi _api;
   final ServiceStore? _cache;
   String? _proPhone;
 
@@ -25,7 +24,7 @@ class ServiceController extends StateNotifier<List<Service>> {
 
     try {
       if (_proPhone != null && _proPhone!.isNotEmpty) {
-        final list = await _api.listByProPhone(_proPhone!);
+        final list = await ServiceApi.listByProPhone(_proPhone!);
         state = list;
         await _cache?.setAll(list);
         return;
@@ -39,13 +38,13 @@ class ServiceController extends StateNotifier<List<Service>> {
   }
 
   Future<void> add(Service s) async {
-    final created = await _api.create(s);
+    final created = await ServiceApi.create(s);
     state = [created, ...state];
     await _cache?.setAll(state);
   }
 
   Future<void> remove(String id) async {
-    await _api.delete(int.parse(id));
+    await ServiceApi.delete(id);
     state = state.where((e) => e.id != id).toList(growable: false);
     await _cache?.setAll(state);
   }
@@ -53,7 +52,7 @@ class ServiceController extends StateNotifier<List<Service>> {
   Future<void> toggleDisponible(String id) async {
     final current = state.firstWhere((e) => e.id == id);
     final updated = current.copyWith(disponible: !current.disponible);
-    await _api.update(updated);
+    await ServiceApi.update(updated);
     state = state.map((e) => e.id == id ? updated : e).toList(growable: false);
     await _cache?.setAll(state);
   }
@@ -64,7 +63,7 @@ class ServiceController extends StateNotifier<List<Service>> {
       _proPhone = prefs.getString('auth_phone');
     }
     if (_proPhone != null && _proPhone!.isNotEmpty) {
-      final list = await _api.listByProPhone(_proPhone!);
+      final list = await ServiceApi.listByProPhone(_proPhone!);
       state = list;
       await _cache?.setAll(list);
     }
@@ -74,18 +73,18 @@ class ServiceController extends StateNotifier<List<Service>> {
   /// filters are currently supported by the endpoint.
   Future<List<Service>> search(SearchFilters filters) {
     final q = filters.query ?? '';
-    return _api.search(q: q, limit: filters.limit, offset: filters.offset);
+    return ServiceApi.search(
+      q: q,
+      limit: filters.limit,
+      offset: filters.offset,
+    );
   }
 }
 
 // Providers
-final serviceApiProvider = Provider<ServiceApi>((ref) => ServiceApi());
 final serviceStoreProvider = Provider<ServiceStore?>((ref) => ServiceStore());
 
 final serviceControllerProvider =
     StateNotifierProvider<ServiceController, List<Service>>(
-      (ref) => ServiceController(
-        ref.read(serviceApiProvider),
-        ref.read(serviceStoreProvider),
-      ),
+      (ref) => ServiceController(ref.read(serviceStoreProvider)),
     );

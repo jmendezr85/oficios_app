@@ -52,10 +52,26 @@ cd oficios_app
 flutter pub get
 ```
 
-### 3. Ejecutar en un dispositivo/emulador
+### 3. Configurar variables de entorno
+
+Copia el archivo de ejemplo y reemplaza `<tu_api_gateway>` por el endpoint de tu
+API Gateway de AWS:
 
 ```bash
-flutter run
+cp .env.example .env
+# editar .env con tu URL real
+```
+
+### 4. Ejecutar en un dispositivo/emulador
+
+```bash
+flutter run --dart-define-from-file=.env
+```
+
+### 5. Compilar apuntando al backend de AWS
+
+```bash
+build apk --dart-define-from-file=.env
 ```
 
 ---

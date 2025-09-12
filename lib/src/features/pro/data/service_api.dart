@@ -1,85 +1,61 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:oficios_app/src/core/config/env.dart';
-import 'package:oficios_app/src/features/pro/domain/service.dart';
+import '../../../core/network/api_client.dart';
+import '../domain/service.dart';
 
 class ServiceApi {
-  ServiceApi({http.Client? client}) : _client = client ?? http.Client();
-
-  final http.Client _client;
-
-  /// Base URL for the backend API.
-  static String get _baseUrl => Env.apiBaseUrl;
-
-  Future<List<Service>> listByProPhone(String proPhone) async {
-    final uri = Uri.parse('$_baseUrl/services_get.php?pro_phone=$proPhone');
-    final res = await _client.get(uri);
-    if (res.statusCode != 200) {
-      throw Exception('HTTP ${res.statusCode}: ${res.body}');
-    }
-    final data = json.decode(res.body);
-    if (data is List) {
-      return data
-          .map((e) => Service.fromMap(e as Map<String, dynamic>))
-          .toList();
-    }
-    return const <Service>[];
+  static Future<List<Service>> listByProPhone(
+    String proPhone, {
+    Map<String, String>? headers,
+  }) async {
+    final json = await ApiClient.getJson(
+      '/services',
+      query: {'proPhone': proPhone},
+      headers: headers,
+    );
+    final items = (json['items'] as List).cast<Map<String, dynamic>>();
+    return items.map((m) => Service.fromMap(m)).toList(growable: false);
   }
 
-  Future<List<Service>> search({
+  static Future<List<Service>> search({
     required String q,
     int limit = 20,
     int offset = 0,
+    Map<String, String>? headers,
   }) async {
-    final uri = Uri.parse(
-      '$_baseUrl/services_get.php?q=${Uri.encodeQueryComponent(q)}&limit=$limit&offset=$offset',
+    final qp = {'q': q, 'limit': '$limit', 'offset': '$offset'};
+    final json = await ApiClient.getJson(
+      '/services',
+      query: qp,
+      headers: headers,
     );
-    final res = await _client.get(uri);
-    if (res.statusCode != 200) {
-      throw Exception('HTTP ${res.statusCode}: ${res.body}');
-    }
-    final data = json.decode(res.body);
-    if (data is List) {
-      return data
-          .map((e) => Service.fromMap(e as Map<String, dynamic>))
-          .toList();
-    }
-    return const <Service>[];
+    final items = (json['items'] as List).cast<Map<String, dynamic>>();
+    return items.map((m) => Service.fromMap(m)).toList(growable: false);
   }
 
-  Future<Service> create(Service service) async {
-    final uri = Uri.parse('$_baseUrl/services_post.php');
-    final res = await _client.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: service.toJson(),
+  static Future<Service> create(
+    Service service, {
+    Map<String, String>? headers,
+  }) async {
+    final json = await ApiClient.postJson(
+      '/services',
+      service.toMap(),
+      headers: headers,
     );
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception('HTTP ${res.statusCode}: ${res.body}');
-    }
-    final data = json.decode(res.body) as Map<String, dynamic>;
-    return Service.fromMap(data);
+    return Service.fromMap(json);
   }
 
-  Future<Service> update(Service service) async {
-    final uri = Uri.parse('$_baseUrl/services_put.php?id=${service.id}');
-    final res = await _client.put(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: service.toJson(),
+  static Future<Service> update(
+    Service service, {
+    Map<String, String>? headers,
+  }) async {
+    final json = await ApiClient.postJson(
+      '/services/update',
+      service.toMap(),
+      headers: headers,
     );
-    if (res.statusCode != 200) {
-      throw Exception('HTTP ${res.statusCode}: ${res.body}');
-    }
-    final data = json.decode(res.body) as Map<String, dynamic>;
-    return Service.fromMap(data);
+    return Service.fromMap(json);
   }
 
-  Future<void> delete(int id) async {
-    final uri = Uri.parse('$_baseUrl/services_delete.php?id=$id');
-    final res = await _client.delete(uri);
-    if (res.statusCode != 200) {
-      throw Exception('HTTP ${res.statusCode}: ${res.body}');
-    }
+  static Future<void> delete(String id, {Map<String, String>? headers}) async {
+    await ApiClient.postJson('/services/delete', {'id': id}, headers: headers);
   }
 }

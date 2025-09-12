@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 class AppDatabase {
   static const _dbName = 'oficios.db';
-  static const _dbVersion = 2; // ⬅️ subimos versión
+  static const _dbVersion = 3; // ⬅️ subimos versión
 
   static Database? _instance;
 
@@ -44,40 +44,74 @@ class AppDatabase {
 
         // v2: tabla job_requests
         await _createJobRequests(db);
+
+        // v3: tabla sync_meta
+        await _createSyncMeta(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await _createJobRequests(db);
+        }
+        if (oldVersion < 3) {
+          await _createSyncMeta(db);
         }
       },
     );
 
     return _instance!;
   }
+}
 
-  static Future<void> _createJobRequests(Database db) async {
-    await db.execute('''
-      CREATE TABLE job_requests(
-        id TEXT PRIMARY KEY,
-        service_id TEXT NOT NULL,
-        client_name TEXT NOT NULL,
-        client_phone TEXT NOT NULL,
-        descripcion TEXT NOT NULL,
-        ciudad TEXT NOT NULL,
-        scheduled_at TEXT,               -- puede ser null
-        status TEXT NOT NULL,            -- pending/accepted/rejected/completed
-        creado_en TEXT NOT NULL,
-        FOREIGN KEY(service_id) REFERENCES services(id)
-      );
-    ''');
-    await db.execute(
-      'CREATE INDEX idx_requests_service ON job_requests(service_id);',
+Future<void> _createJobRequests(Database db) async {
+  await db.execute('''
+    CREATE TABLE job_requests(
+      id TEXT PRIMARY KEY,
+      service_id TEXT NOT NULL,
+      client_name TEXT NOT NULL,
+      client_phone TEXT NOT NULL,
+      descripcion TEXT NOT NULL,
+      ciudad TEXT NOT NULL,
+      scheduled_at TEXT,               -- puede ser null
+      status TEXT NOT NULL,            -- pending/accepted/rejected/completed
+      creado_en TEXT NOT NULL,
+      FOREIGN KEY(service_id) REFERENCES services(id)
     );
-    await db.execute(
-      'CREATE INDEX idx_requests_status ON job_requests(status);',
+  ''');
+  await db.execute(
+    'CREATE INDEX idx_requests_service ON job_requests(service_id);',
+  );
+  await db.execute('CREATE INDEX idx_requests_status ON job_requests(status);');
+  await db.execute('CREATE INDEX idx_requests_ciudad ON job_requests(ciudad);');
+}
+
+Future<void> _createSyncMeta(Database db) async {
+  await db.execute('''
+    CREATE TABLE sync_meta(
+      table_name TEXT PRIMARY KEY,
+      last_sync TEXT
     );
-    await db.execute(
-      'CREATE INDEX idx_requests_ciudad ON job_requests(ciudad);',
-    );
-  }
+  ''');
+}
+
+/// Guarda la fecha/hora del último sincronizado para [table].
+Future<void> setLastSync(String table, DateTime moment) async {
+  final db = await AppDatabase.database;
+  await db.insert('sync_meta', {
+    'table_name': table,
+    'last_sync': moment.toIso8601String(),
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+}
+
+/// Obtiene la fecha/hora del último sincronizado para [table].
+Future<DateTime?> getLastSync(String table) async {
+  final db = await AppDatabase.database;
+  final res = await db.query(
+    'sync_meta',
+    where: 'table_name = ?',
+    whereArgs: [table],
+    limit: 1,
+  );
+  if (res.isEmpty) return null;
+  final value = res.first['last_sync'] as String?;
+  return value != null ? DateTime.parse(value) : null;
 }

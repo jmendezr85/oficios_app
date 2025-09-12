@@ -3,7 +3,10 @@ import '../../pro/domain/service.dart';
 import '../domain/search_filters.dart';
 
 class ServiceApi {
-  static Future<List<Service>> search(SearchFilters f) async {
+  static Future<List<Service>> search(
+    SearchFilters f, {
+    Map<String, String>? headers,
+  }) async {
     final qp = <String, String>{
       'limit': '${f.limit}',
       'offset': '${f.offset}',
@@ -20,7 +23,11 @@ class ServiceApi {
     if (f.minPrecio != null) qp['minPrecio'] = '${f.minPrecio}';
     if (f.maxPrecio != null) qp['maxPrecio'] = '${f.maxPrecio}';
 
-    final json = await ApiClient.getJson('/services_get', query: qp);
+    final json = await ApiClient.getJson(
+      '/services',
+      query: qp,
+      headers: headers,
+    );
     final items = (json['items'] as List).cast<Map<String, dynamic>>();
     return items
         .map(
@@ -29,10 +36,10 @@ class ServiceApi {
             titulo: m['titulo'] as String,
             categoria: m['categoria'] as String,
             ciudad: m['ciudad'] as String,
-            precioPorHora: (m['precio_por_hora'] as num).toDouble(),
+            precioPorHora: (m['precioPorHora'] as num).toDouble(),
             descripcion: m['descripcion'] as String,
-            disponible: (m['disponible'] as int) == 1,
-            creadoEn: DateTime.parse(m['creado_en'] as String),
+            disponible: m['disponible'] as bool,
+            creadoEn: DateTime.parse(m['creadoEn'] as String),
           ),
         )
         .toList(growable: false);

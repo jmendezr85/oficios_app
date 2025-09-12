@@ -9,6 +9,7 @@ class JobRequestApi {
     required String descripcion,
     required String ciudad,
     DateTime? scheduledAt,
+    Map<String, String>? headers,
   }) async {
     final res = await ApiClient.postJson('/requests', {
       'serviceId': serviceId,
@@ -17,29 +18,36 @@ class JobRequestApi {
       'descripcion': descripcion,
       'ciudad': ciudad,
       'scheduledAt': scheduledAt?.toIso8601String(),
-    });
+    }, headers: headers);
     return (res['id'] as String);
   }
 
-  static Future<List<JobRequest>> list({String? status}) async {
+  static Future<List<JobRequest>> list({
+    String? status,
+    Map<String, String>? headers,
+  }) async {
     final qp = <String, String>{};
     if (status != null && status.isNotEmpty) qp['status'] = status;
-    final json = await ApiClient.getJson('/requests', query: qp);
+    final json = await ApiClient.getJson(
+      '/requests',
+      query: qp,
+      headers: headers,
+    );
     final items = (json['items'] as List).cast<Map<String, dynamic>>();
     return items
         .map(
           (m) => JobRequest(
             id: m['id'] as String,
-            serviceId: m['service_id'] as String,
-            clientName: m['client_name'] as String,
-            clientPhone: m['client_phone'] as String,
+            serviceId: m['serviceId'] as String,
+            clientName: m['clientName'] as String,
+            clientPhone: m['clientPhone'] as String,
             descripcion: m['descripcion'] as String,
             ciudad: m['ciudad'] as String,
-            scheduledAt: (m['scheduled_at'] == null)
+            scheduledAt: (m['scheduledAt'] == null)
                 ? null
-                : DateTime.parse(m['scheduled_at'] as String),
+                : DateTime.parse(m['scheduledAt'] as String),
             status: m['status'] as String,
-            creadoEn: DateTime.parse(m['creado_en'] as String),
+            creadoEn: DateTime.parse(m['creadoEn'] as String),
           ),
         )
         .toList(growable: false);
@@ -48,27 +56,32 @@ class JobRequestApi {
   static Future<List<JobRequest>> listByClientPhone(
     String phone, {
     String? status,
+    Map<String, String>? headers,
   }) async {
     final qp = <String, String>{'clientPhone': phone};
     if (status != null && status.isNotEmpty) {
       qp['status'] = status;
     }
-    final json = await ApiClient.getJson('/requests', query: qp);
+    final json = await ApiClient.getJson(
+      '/requests',
+      query: qp,
+      headers: headers,
+    );
     final items = (json['items'] as List).cast<Map<String, dynamic>>();
     return items
         .map(
           (m) => JobRequest(
             id: m['id'] as String,
-            serviceId: m['service_id'] as String,
-            clientName: m['client_name'] as String,
-            clientPhone: m['client_phone'] as String,
+            serviceId: m['serviceId'] as String,
+            clientName: m['clientName'] as String,
+            clientPhone: m['clientPhone'] as String,
             descripcion: m['descripcion'] as String,
             ciudad: m['ciudad'] as String,
-            scheduledAt: (m['scheduled_at'] == null)
+            scheduledAt: (m['scheduledAt'] == null)
                 ? null
-                : DateTime.parse(m['scheduled_at'] as String),
+                : DateTime.parse(m['scheduledAt'] as String),
             status: m['status'] as String,
-            creadoEn: DateTime.parse(m['creado_en'] as String),
+            creadoEn: DateTime.parse(m['creadoEn'] as String),
           ),
         )
         .toList(growable: false);
@@ -77,10 +90,11 @@ class JobRequestApi {
   static Future<void> updateStatus({
     required String id,
     required String status, // 'pending' | 'accepted' | 'rejected' | 'completed'
+    Map<String, String>? headers,
   }) async {
     await ApiClient.postJson('/requests/update_status', {
       'id': id,
       'status': status,
-    });
+    }, headers: headers);
   }
 }

@@ -14,8 +14,10 @@ class Env {
   Env._();
 
   /// Base URL for the backend API.
+  /// Must point to an HTTPS endpoint. You can override this value at build
+  /// time using `--dart-define` or `--dart-define-from-file`.
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.1.7/oficios_api',
+    defaultValue: 'https://example.com/prod',
   );
 }
