@@ -36,7 +36,8 @@ def run_migrations():
             "body": "Migrations executed successfully",
         }
     except Exception as error:
-        logger.exception("Error running migrations")
+        logger.exception("Error running migrations: %s", error)
+        print(f"Failed to run migrations: {error}")
         if conn:
             conn.rollback()
         return {
