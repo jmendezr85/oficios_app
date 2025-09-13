@@ -1,5 +1,6 @@
-# Miscellaneous
-*.class
+# ----------------------------
+# Generales / SO / Editores
+# ----------------------------
 *.log
 *.pyc
 *.swp
@@ -9,55 +10,73 @@
 .buildlog/
 .history
 .svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-# Flutter
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-build/
-ios/Pods/
-android/.gradle/
-android/app/build/
 
 # IDEs
 .idea/
 .vscode/
 *.iml
+*.ipr
+*.iws
 
-# Otros
-*.log
+# ----------------------------
+# Flutter / Dart
+# ----------------------------
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+.packages
+build/
+migrate_working_dir/
+app.*.symbols
+app.*.map.json
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/.last_build_id
+ios/Flutter/flutter_export_environment.sh
+
+# Android
+android/.gradle/
+android/app/build/
+android/app/debug
+android/app/profile
+android/app/release
+# Firmas / llaves (¡sensible!)
+android/key.properties
+android/app/*.keystore
+android/app/*.jks
+# Firebase (si lo usas; sensible)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# ----------------------------
+# Node / JavaScript (API y pruebas)
+# ----------------------------
+**/node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+# (Normalmente SÍ se versiona el lockfile de apps)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ----------------------------
+# Python (si usas entornos locales)
+# ----------------------------
+.venv/
+venv/
+ENV/
+
+# ----------------------------
+# Archivos sensibles / locales
+# ----------------------------
+.env
+.env.*
+!.env.example
+secret.json
+body.json
