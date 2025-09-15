@@ -14,6 +14,22 @@ const { sequelize, Usuario, Categoria, Servicio, Valoracion } = require("./model
 const app = express();
 app.use(express.json());
 
+const SALT_ROUNDS = (() => {
+  const envRounds = Number(process.env.BCRYPT_ROUNDS || process.env.BCRYPT_SALT_ROUNDS);
+  if (Number.isInteger(envRounds) && envRounds >= 4 && envRounds <= 15) {
+    return envRounds;
+  }
+  return 12;
+})();
+
+const ALLOWED_SIGNUP_ROLES = new Set(["cliente", "proveedor"]);
+
+const normalizeEmail = (value = "") => value.trim().toLowerCase();
+const normalizePhone = (value) => {
+  if (value === undefined || value === null) return null;
+  const trimmed = String(value).trim();
+  return trimmed.length ? trimmed : null;
+};
 // --- CORS con allowlist desde .env ---
 // En .env puedes poner:
 // CORS_ORIGIN=http://localhost:3000
@@ -108,19 +124,87 @@ app.post(
   })
 );
 
+
+// --- Registro de usuarios ---
+app.post(
+  "/auth/register",
+  ah(async (req, res) => {
+    const { nombre, correo, password, telefono, rol } = req.body || {};
+
+    const cleanNombre = typeof nombre === "string" ? nombre.trim() : "";
+    const cleanCorreo = normalizeEmail(typeof correo === "string" ? correo : "");
+    const cleanPassword = typeof password === "string" ? password : "";
+    const cleanTelefono = normalizePhone(telefono);
+    const rawRol = typeof rol === "string" ? rol.trim().toLowerCase() : "cliente";
+
+    if (!cleanNombre || !cleanCorreo || !cleanPassword) {
+      return res
+        .status(400)
+        .json({ error: "nombre, correo y password son requeridos" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanCorreo)) {
+      return res.status(400).json({ error: "correo inválido" });
+    }
+
+    if (cleanPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ error: "password debe tener al menos 8 caracteres" });
+    }
+
+    if (!ALLOWED_SIGNUP_ROLES.has(rawRol)) {
+      return res.status(400).json({ error: "rol inválido" });
+    }
+
+    const existing = await Usuario.findOne({ where: { correo: cleanCorreo } });
+    if (existing) {
+      return res.status(409).json({ error: "correo ya registrado" });
+    }
+
+    const password_hash = await bcrypt.hash(cleanPassword, SALT_ROUNDS);
+    const user = await Usuario.create({
+      nombre: cleanNombre,
+      correo: cleanCorreo,
+      password_hash,
+      telefono: cleanTelefono,
+      rol: rawRol,
+    });
+
+    const token = jwt.sign({ sub: user.id, rol: user.rol }, JWT_SECRET, {
+      expiresIn: "8h",
+    });
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user.id,
+        nombre: user.nombre,
+        correo: user.correo,
+        telefono: user.telefono,
+        rol: user.rol,
+      },
+    });
+  })
+);
+
 // --- Login (requiere que password_hash sea un bcrypt válido en la DB) ---
 app.post(
   "/auth/login",
   ah(async (req, res) => {
-    const { correo, password } = req.body;
-    if (!correo || !password) {
+    const { correo, password } = req.body || {};
+    const cleanCorreo = normalizeEmail(typeof correo === "string" ? correo : "");
+    const cleanPassword = typeof password === "string" ? password : "";
+
+    if (!cleanCorreo || !cleanPassword) {
       return res.status(400).json({ error: "correo y password son requeridos" });
     }
 
-    const user = await Usuario.findOne({ where: { correo } });
+     const user = await Usuario.findOne({ where: { correo: cleanCorreo } });
     if (!user) return res.status(401).json({ error: "credenciales inválidas" });
 
-    const ok = await bcrypt.compare(password, user.password_hash);
+    const ok = await bcrypt.compare(cleanPassword, user.password_hash);
     if (!ok) return res.status(401).json({ error: "credenciales inválidas" });
 
     const token = jwt.sign({ sub: user.id, rol: user.rol }, JWT_SECRET, { expiresIn: "8h" });
