@@ -1,14 +1,13 @@
-const path = require("path");
 const { Sequelize } = require("sequelize");
-require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+const config = require("./config");
 
-const { DB_HOST, DB_PORT = "3306", DB_USER, DB_PASS, DB_NAME } = process.env;
+const { host, port, user, pass, name, logging } = config.db;
 
-const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
-  host: DB_HOST,
-  port: Number(DB_PORT),
+const sequelize = new Sequelize(name, user, pass, {
+  host,
+  port,
   dialect: "mysql",
-  logging: false,
+  logging: Boolean(logging) && console.log,
   define: { freezeTableName: true },
   pool: { max: 5, min: 0, acquire: 20000, idle: 5000 },
 });
